@@ -1,0 +1,49 @@
+name:                stm-free
+version:             0.1.0.0
+github:              "graninas/stm-free"
+license:             BSD3
+author:              "Alexander Granin"
+maintainer:          "graninas@gmail.com"
+copyright:           "2018 Alexander Granin"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+description:         Please see the README on Github at <https://github.com/githubuser/stm-free#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- free
+- mtl
+- aeson
+- containers
+- bytestring
+- time
+- random
+
+library:
+  source-dirs: src
+
+executables:
+  stm-free-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - stm-free
+
+tests:
+  stm-free-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - stm-free
+    - hspec
