@@ -11,19 +11,23 @@ import qualified Data.ByteString.Lazy       as BSL
 import           Data.IORef                 (IORef, modifyIORef, newIORef,
                                              readIORef, writeIORef)
 import qualified Data.Map                   as Map
-import           Data.Time.Clock            (UTCTime, getCurrentTime)
+import           Data.Unique                (Unique, hashUnique)
 import           GHC.Generics               (Generic)
 
-type Timestamp = UTCTime
+type UStamp = Unique
 
-type TVarId = Int
+newtype TVarId = TVarId UStamp
+  deriving (Eq, Ord)
 
-type TVarData   = IORef BSL.ByteString                  -- TODO: It's not necessary since MVar
-data TVarHandle = TVarHandle TVarId Timestamp TVarData  -- TODO: remove TVarId
+instance Show TVarId where
+  show (TVarId ustamp) = show $ hashUnique ustamp
+
+type TVarData   = IORef BSL.ByteString                  -- TODO: IORef is not necessary since MVar
+data TVarHandle = TVarHandle UStamp TVarData
 type TVars      = Map.Map TVarId TVarHandle
 
 data AtomicRuntime = AtomicRuntime
-  { timestamp  :: Timestamp
+  { ustamp     :: UStamp
   , localTVars :: TVars
   }
 

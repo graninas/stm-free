@@ -19,7 +19,6 @@ dependencies:
 - aeson
 - containers
 - bytestring
-- time
 - random
 
 library:

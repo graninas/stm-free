@@ -1,11 +1,8 @@
-module PhilosophersSpec where
+module STMSpec where
 
 import           Control.Concurrent          (forkIO)
 import           Control.Concurrent.STM.Free
 
-import           Philosophers.Philosophers
-import           Philosophers.STM
-import           Philosophers.Types
 import           Test.Hspec
 
 spec = do
@@ -29,6 +26,3 @@ spec = do
         tvar <- atomically ctx $ newTVar (10 :: Int)
         res  <- atomically ctx $ readTVar tvar
         res `shouldBe` 10
-
-  describe "Philosophers test" $
-    it "Philosopers" $ runPhilosophers 5

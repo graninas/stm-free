@@ -16,7 +16,7 @@ import           Control.Concurrent.STM.Free.STML
 import           Control.Concurrent.STM.Free.TVar
 
 delayBase :: Int
-delayBase = 500 -- ms
+delayBase = 500 -- microsecs
 
 atomically :: Context -> STML a -> IO a
 atomically = runSTM delayBase
