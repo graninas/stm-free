@@ -23,16 +23,16 @@ instance Functor STMF where
 
 type STML next = Free STMF next
 
-newTVar :: ToJSON a => a -> Free STMF (TVar a)
+newTVar :: ToJSON a => a -> STML (TVar a)
 newTVar a = liftF (NewTVar a id)
 
-writeTVar :: ToJSON a => TVar a -> a -> Free STMF ()
+writeTVar :: ToJSON a => TVar a -> a -> STML ()
 writeTVar tvar a = liftF (WriteTVar tvar a ())
 
-readTVar :: FromJSON a => TVar a -> Free STMF a
+readTVar :: FromJSON a => TVar a -> STML a
 readTVar tvar = liftF (ReadTVar tvar id)
 
-retry :: Free STMF ()
+retry :: STML ()
 retry = liftF Retry
 
 modifyTVar :: (ToJSON a, FromJSON a) => TVar a -> (a -> a) -> STML ()
