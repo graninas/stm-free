@@ -1,5 +1,6 @@
 module Control.Concurrent.STM.Free.Internal.Impl where
 
+import           Control.Concurrent                                    (threadDelay)
 import           Control.Concurrent.MVar                               (putMVar,
                                                                         takeMVar)
 import           Control.Monad.State.Strict                            (runStateT)
@@ -59,4 +60,6 @@ runSTM delay ctx stml = do
       success <- tryCommit ctx ustamp stagedTVars
       if success
         then return res
-        else runSTM (delay * 2) ctx stml      -- TODO: tail recursion
+        else do
+          threadDelay delay
+          runSTM (delay * 2) ctx stml      -- TODO: tail recursion

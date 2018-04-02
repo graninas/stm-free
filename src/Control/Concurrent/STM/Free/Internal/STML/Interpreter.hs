@@ -26,7 +26,7 @@ newTVar' a = do
 
 readTVar' :: FromJSON a => TVar a -> Atomic a
 readTVar' (TVar tvarId) = do
-  AtomicRuntime ustamp tvars <- get
+  AtomicRuntime _ tvars <- get
 
   case Map.lookup tvarId tvars of
     Nothing                        -> error $ "Impossible: TVar not found: " ++ show tvarId
