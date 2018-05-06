@@ -34,6 +34,17 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - stm-free
+  bench-exe:
+    main:                Main.hs
+    source-dirs:         bench
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - stm-free
+    - criterion
+    - stm
 
 tests:
   stm-free-test:
