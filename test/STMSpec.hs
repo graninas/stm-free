@@ -1,13 +1,15 @@
 module STMSpec where
 
-import           Control.Concurrent          (forkIO)
-import           Control.Concurrent.STM.Free
-import           Control.Exception
-
+import           Control.Concurrent          (forkIO, killThread, threadDelay)
+import           Control.Concurrent.MVar     (newEmptyMVar, putMVar, takeMVar)
+import           Control.Exception           (ErrorCall (..), catch)
+import           Control.Monad               (replicateM_)
 import           Test.Hspec
 
-spec =
-  describe "STM test" $ do
+import           Control.Concurrent.STM.Free
+
+spec = do
+  describe "STM TVar test" $ do
 
     it "newTVar / readTVar" $ do
       ctx <- newContext
@@ -30,6 +32,16 @@ spec =
         if a == 10 then pure "OK" else retry
       res `shouldBe` "OK"
 
+    it "Contains active retry" $ do
+      ctx  <- newContext
+      tvar <- atomically ctx $ newTVar (10 :: Int)
+      forkIO $ atomically ctx $ do
+        writeTVar tvar 20
+        retry
+      threadDelay 500000
+      res <- atomically ctx $ readTVar tvar
+      res `shouldBe` 10
+
     it "TVar created in separate transaction" $ do
         ctx  <- newContext
         tvar <- atomically ctx $ newTVar (10 :: Int)
@@ -49,6 +61,23 @@ spec =
       catchSTM ctx (transWithExc tvar) (handler2 tvar)
       res <- atomically ctx $ readTVar tvar
       res `shouldBe` "Exception in transaction"
+
+  describe "STM TMVar test" $ do
+    it "TMVar communication channel" $ do
+      ctx <- newContext
+      tvar <- atomically ctx $ newTVar (0 :: Int)
+      tmvar <- newEmptyTMVarIO ctx
+
+      forkIO $ replicateM_ 5 $ atomically ctx $ do
+        d <- takeTMVar tmvar
+        r <- readTVar tvar
+        writeTVar tvar $ r + d
+
+      forkIO $ replicateM_ 5 $ atomically ctx $ putTMVar tmvar 1
+
+      threadDelay 500000
+      res <- atomically ctx $ readTVar tvar
+      res `shouldBe` 5
   where
     transWithExc :: TVar String -> STML ()
     transWithExc tvar = do
