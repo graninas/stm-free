@@ -32,7 +32,7 @@ writeTVar tvar a = liftF (WriteTVar tvar a ())
 readTVar :: FromJSON a => TVar a -> STML a
 readTVar tvar = liftF (ReadTVar tvar id)
 
-retry :: STML ()
+retry :: STML a
 retry = liftF Retry
 
 modifyTVar :: (ToJSON a, FromJSON a) => TVar a -> (a -> a) -> STML ()

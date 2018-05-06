@@ -4,6 +4,7 @@ module Control.Concurrent.STM.Free.STM where
 
 import           Control.Concurrent.MVar                    (MVar, newMVar,
                                                              putMVar, takeMVar)
+import           Control.Exception
 import           Control.Monad.Free
 import           Data.Aeson                                 (FromJSON, ToJSON,
                                                              decode, encode)
@@ -26,3 +27,8 @@ newTVarIO ctx = atomically ctx . newTVar
 
 newContext :: IO Context
 newContext = Context <$> newMVar Map.empty
+
+catchSTM :: Exception e => Context -> STML a -> (e -> STML a) -> IO a
+catchSTM ctx act handler = catch (atomically ctx act) handler'
+  where
+    handler' = atomically ctx . handler
