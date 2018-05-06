@@ -22,7 +22,7 @@ newtype TVarId = TVarId UStamp
 instance Show TVarId where
   show (TVarId ustamp) = show $ hashUnique ustamp
 
-type TVarData   = IORef BSL.ByteString                  -- TODO: IORef is not necessary since MVar
+type TVarData   = IORef BSL.ByteString
 data TVarHandle = TVarHandle UStamp TVarData
 type TVars      = Map.Map TVarId TVarHandle
 
