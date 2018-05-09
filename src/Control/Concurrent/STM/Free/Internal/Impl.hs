@@ -1,13 +1,16 @@
 module Control.Concurrent.STM.Free.Internal.Impl where
 
-import           Control.Monad (when)
 import           Control.Concurrent                                    (threadDelay)
 import           Control.Concurrent.MVar                               (putMVar,
+                                                                        readMVar,
                                                                         takeMVar)
+import           Control.Monad                                         (unless,
+                                                                        when)
 import           Control.Monad.State.Strict                            (runStateT)
 import qualified Data.HMap                                             as HMap
-import           Data.IORef                                            (writeIORef, newIORef,
-                                                                        readIORef)
+import           Data.IORef                                            (newIORef,
+                                                                        readIORef,
+                                                                        writeIORef)
 import qualified Data.Map                                              as Map
 import           Data.Unique                                           (newUnique)
 
@@ -18,24 +21,22 @@ import           Control.Concurrent.STM.Free.STML
 import           Control.Concurrent.STM.Free.TVar
 
 takeSnapshot :: Context -> IO (UStamp, TVars)
-takeSnapshot (Context lock tvarsRef) = do
-  takeMVar lock
-  tvars <- readIORef tvarsRef
-  putMVar lock ()
+takeSnapshot (Context mtvars) = do
+  tvars <- readMVar mtvars
   ustamp <- newUnique
   pure (ustamp, tvars)
 
+-- TODO: exception safety (with proper implementation, shouldn't be a problem)
 tryCommit :: Context -> AtomicRuntime -> IO Bool
-tryCommit (Context lock origTVarsRef)
+tryCommit (Context mtvars)
           (AtomicRuntime stagedUS _ conflictDetector finalizer) = do
-  takeMVar lock
-  origTVars <- readIORef origTVarsRef
+  origTVars <- takeMVar mtvars
   conflict <- conflictDetector origTVars
-  when (not conflict) $ do
-    stagedTVars <- finalizer origTVars
-    let newTVars = HMap.union stagedTVars origTVars
-    writeIORef origTVarsRef newTVars
-  putMVar lock ()
+  if conflict
+    then putMVar mtvars origTVars
+    else do
+      stagedTVars <- finalizer origTVars
+      putMVar mtvars $ HMap.union stagedTVars origTVars
   pure $ not conflict
 
 runSTM :: Int -> Context -> STML a -> IO a

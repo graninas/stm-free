@@ -46,9 +46,8 @@ data AtomicRuntime = AtomicRuntime
 
 type Atomic a = StateT AtomicRuntime IO a
 
-data Context = Context
-  { lock     :: MVar ()
-  , tvarsRef :: IORef TVars
+newtype Context = Context
+  { mtvars :: MVar TVars
   }
 
 data RetryCmd = RetryCmd

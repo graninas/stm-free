@@ -33,9 +33,8 @@ newEmptyTMVarIO ctx = atomically ctx newEmptyTMVar
 
 newContext :: IO Context
 newContext = do
-  lock <- newMVar ()
-  tvarsRef <- newIORef HMap.empty
-  pure $ Context lock tvarsRef
+  mtvars <- newMVar HMap.empty
+  pure $ Context mtvars
 
 catchSTM :: Exception e => Context -> STML a -> (e -> STML a) -> IO a
 catchSTM ctx act handler = catch (atomically ctx act) handler'
