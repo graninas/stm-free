@@ -9,5 +9,8 @@ module Control.Concurrent.STM.Free
 import           Control.Concurrent.STM.Free.Internal.Types (Context)
 import           Control.Concurrent.STM.Free.STM
 import           Control.Concurrent.STM.Free.STML
-import           Control.Concurrent.STM.Free.TMVar
-import           Control.Concurrent.STM.Free.TVar
+import           Control.Concurrent.STM.Free.TMVar          (TMVar,
+                                                             newEmptyTMVar,
+                                                             newTMVar, putTMVar,
+                                                             takeTMVar)
+import           Control.Concurrent.STM.Free.TVar           (TVar)

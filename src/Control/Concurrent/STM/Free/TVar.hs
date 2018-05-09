@@ -1,5 +1,7 @@
 module Control.Concurrent.STM.Free.TVar where
 
-import           Control.Concurrent.STM.Free.Internal.Types (TVarId)
+import qualified Data.HMap                                  as HMap
 
-data TVar a = TVar TVarId
+import           Control.Concurrent.STM.Free.Internal.Types (TVarKey)
+
+newtype TVar a = TVar (TVarKey a)

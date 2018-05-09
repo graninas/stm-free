@@ -2,17 +2,13 @@
 
 module Control.Concurrent.STM.Free.STML where
 
-import           Control.Monad.Free
-import           Data.Aeson                       (FromJSON, ToJSON, decode,
-                                                   encode)
-import           GHC.Generics                     (Generic)
-
 import           Control.Concurrent.STM.Free.TVar
+import           Control.Monad.Free
 
 data STMF next where
-  NewTVar   :: ToJSON a   =>           a -> (TVar a -> next) -> STMF next
-  WriteTVar :: ToJSON a   => TVar a -> a -> next             -> STMF next
-  ReadTVar  :: FromJSON a => TVar a ->      (a -> next)      -> STMF next
+  NewTVar   ::           a -> (TVar a -> next) -> STMF next
+  WriteTVar :: TVar a -> a -> next             -> STMF next
+  ReadTVar  :: TVar a ->      (a -> next)      -> STMF next
   Retry     :: STMF next
 
 instance Functor STMF where
@@ -23,17 +19,17 @@ instance Functor STMF where
 
 type STML next = Free STMF next
 
-newTVar :: ToJSON a => a -> STML (TVar a)
+newTVar :: a -> STML (TVar a)
 newTVar a = liftF (NewTVar a id)
 
-writeTVar :: ToJSON a => TVar a -> a -> STML ()
+writeTVar :: TVar a -> a -> STML ()
 writeTVar tvar a = liftF (WriteTVar tvar a ())
 
-readTVar :: FromJSON a => TVar a -> STML a
+readTVar :: TVar a -> STML a
 readTVar tvar = liftF (ReadTVar tvar id)
 
 retry :: STML a
 retry = liftF Retry
 
-modifyTVar :: (ToJSON a, FromJSON a) => TVar a -> (a -> a) -> STML ()
+modifyTVar :: TVar a -> (a -> a) -> STML ()
 modifyTVar tvar f = readTVar tvar >>= writeTVar tvar . f
