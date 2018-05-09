@@ -35,8 +35,7 @@ newContext :: IO Context
 newContext = do
   lock <- newMVar ()
   tvarsRef <- newIORef HMap.empty
-  clonerRef <- newIORef pure
-  pure $ Context lock tvarsRef clonerRef
+  pure $ Context lock tvarsRef
 
 catchSTM :: Exception e => Context -> STML a -> (e -> STML a) -> IO a
 catchSTM ctx act handler = catch (atomically ctx act) handler'

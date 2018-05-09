@@ -28,18 +28,21 @@ import           GHC.Generics               (Generic)
 
 type UStamp = Unique
 type OrigUStamp = UStamp
-type Updated = Bool
+type UpdatedUStamp = UStamp
 
-data TVarHandle a = TVarHandle OrigUStamp Updated (IORef a)
+data TVarHandle a = TVarHandle OrigUStamp UpdatedUStamp (IORef a)
 type TVarKey a = HMap.HKey HMap.T (TVarHandle a)
 type TVars = HMap.HMap
 
 type Cloner = TVars -> IO TVars
+type Finalizer = TVars -> IO TVars
+type ConflictDetector = TVars -> IO Bool
 
 data AtomicRuntime = AtomicRuntime
   { stagedUS   :: UStamp
   , localTVars :: TVars
-  , cloner     :: Cloner
+  , conflictDetector :: ConflictDetector
+  , finalizer :: Finalizer
   }
 
 type Atomic a = StateT AtomicRuntime IO a
@@ -47,7 +50,6 @@ type Atomic a = StateT AtomicRuntime IO a
 data Context = Context
   { lock      :: MVar ()
   , tvarsRef  :: IORef TVars
-  , clonerRef :: IORef Cloner
   }
 
 data RetryCmd = RetryCmd
