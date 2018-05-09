@@ -20,11 +20,9 @@ newTVar' a = do
   AtomicRuntime rtStamp tvars conflictDetector finalizer <- get
 
   key <- liftIO HMap.createKey
-  dataRef <- liftIO $ newIORef a
-  let tvarHandle = TVarHandle rtStamp rtStamp dataRef
 
+  let tvarHandle = TVarHandle rtStamp rtStamp a
   let newTVars = HMap.insert key tvarHandle tvars
-
   let newFinalizer finalizedTVars = do
         prevFinalizedTVars <- finalizer finalizedTVars
         pure $ HMap.insert key tvarHandle prevFinalizedTVars
@@ -38,8 +36,8 @@ readTVar' (TVar key) = do
   let tvarId = hashUnique $ HMap.unique key
 
   case HMap.lookup key tvars of
-    Nothing                       -> error $ "TVar not found (are you using the right context?): " ++ show tvarId
-    Just (TVarHandle _ _ dataRef) -> liftIO $ readIORef dataRef
+    Nothing                   -> error $ "TVar not found (are you using the right context?): " ++ show tvarId
+    Just (TVarHandle _ _ val) -> pure val
 
 writeTVar' :: TVar a -> a -> Atomic ()
 writeTVar' (TVar key) a = do
@@ -48,14 +46,12 @@ writeTVar' (TVar key) a = do
   let tvarId = hashUnique $ HMap.unique key
   case HMap.lookup key tvars of
     Nothing -> error $ "TVar not found (are you using the right context?): " ++ show tvarId
-    Just (TVarHandle origUS _ dataRef) -> do
-      newDataRef <- liftIO $ newIORef a
-      let newTVarHandle = TVarHandle origUS rtStamp newDataRef
+    Just (TVarHandle origUS _ _) -> do
+      let newTVarHandle = TVarHandle origUS rtStamp a
       let newTVars = HMap.insert key newTVarHandle tvars
-      let detectConflict origTVars = do
-            case HMap.lookup key origTVars of
-              Nothing -> False
-              Just (TVarHandle origUS' _ _) -> origUS' /= origUS
+      let detectConflict origTVars = case HMap.lookup key origTVars of
+            Nothing                       -> False
+            Just (TVarHandle origUS' _ _) -> origUS' /= origUS
 
       let newConflictDetector origTVars = do
             prevConflict <- conflictDetector origTVars
@@ -65,7 +61,7 @@ writeTVar' (TVar key) a = do
 
       let newFinalizer finalizedTVars = do
             prevFinalizedTVars <- finalizer finalizedTVars
-            let finalizedHandle = TVarHandle rtStamp rtStamp newDataRef
+            let finalizedHandle = TVarHandle rtStamp rtStamp a
             pure $ HMap.insert key finalizedHandle prevFinalizedTVars
 
       put $ AtomicRuntime rtStamp newTVars newConflictDetector newFinalizer

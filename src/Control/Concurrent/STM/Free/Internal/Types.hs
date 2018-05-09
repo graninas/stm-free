@@ -18,6 +18,7 @@ import           GHC.Generics               (Generic)
 -- + Remove FromJSON / ToJSON limitation
 -- + Conflicts resolving: remove string building as conflict indicator
 -- + Clone on write
+-- + Remove IORef from TVarHandle.
 -- - Store context id in every TVar. This will allow to detect TVars in wrong contexts.
 -- - Replace MVar lock with atomicModifyIORef'
 -- - Replace Free with Freer ("No Remorse")
@@ -29,11 +30,10 @@ type UStamp = Unique
 type OrigUStamp = UStamp
 type UpdatedUStamp = UStamp
 
-data TVarHandle a = TVarHandle OrigUStamp UpdatedUStamp (IORef a)
+data TVarHandle a = TVarHandle OrigUStamp UpdatedUStamp a
 type TVarKey a = HMap.HKey HMap.T (TVarHandle a)
 type TVars = HMap.HMap
 
-type Cloner = TVars -> IO TVars
 type Finalizer = TVars -> IO TVars
 type ConflictDetector = TVars -> IO Bool
 
