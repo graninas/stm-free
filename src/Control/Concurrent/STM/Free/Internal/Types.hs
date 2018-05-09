@@ -6,7 +6,6 @@ import           Control.Concurrent.MVar    (MVar, newMVar, putMVar, takeMVar)
 import           Control.Monad.Free
 import           Control.Monad.State.Strict (StateT, evalStateT, get, modify,
                                              put)
-import qualified Data.Aeson                 as A
 import qualified Data.ByteString.Lazy       as BSL
 import qualified Data.HMap                  as HMap
 import           Data.IORef                 (IORef, modifyIORef, newIORef,
@@ -16,7 +15,7 @@ import           Data.Unique                (Unique, hashUnique)
 import           GHC.Generics               (Generic)
 
 -- TODOs:
--- - Remove FromJSON / ToJSON limitation
+-- + Remove FromJSON / ToJSON limitation
 -- - Conflicts resolving: remove string building as conflict indicator
 -- - Store context id in every TVar. This will allow to detect TVars in wrong contexts.
 -- - Replace MVar lock with atomicModifyIORef'
@@ -39,17 +38,17 @@ type Finalizer = TVars -> IO TVars
 type ConflictDetector = TVars -> IO Bool
 
 data AtomicRuntime = AtomicRuntime
-  { stagedUS   :: UStamp
-  , localTVars :: TVars
+  { stagedUS         :: UStamp
+  , localTVars       :: TVars
   , conflictDetector :: ConflictDetector
-  , finalizer :: Finalizer
+  , finalizer        :: Finalizer
   }
 
 type Atomic a = StateT AtomicRuntime IO a
 
 data Context = Context
-  { lock      :: MVar ()
-  , tvarsRef  :: IORef TVars
+  { lock     :: MVar ()
+  , tvarsRef :: IORef TVars
   }
 
 data RetryCmd = RetryCmd
