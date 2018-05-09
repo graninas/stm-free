@@ -16,14 +16,14 @@ import           GHC.Generics               (Generic)
 
 -- TODOs:
 -- + Remove FromJSON / ToJSON limitation
--- - Conflicts resolving: remove string building as conflict indicator
+-- + Conflicts resolving: remove string building as conflict indicator
+-- + Clone on write
 -- - Store context id in every TVar. This will allow to detect TVars in wrong contexts.
 -- - Replace MVar lock with atomicModifyIORef'
 -- - Replace Free with Freer ("No Remorse")
 -- - Make runSTM tail-recursive
 -- - Remove runStateT, make it IORef
 -- - Remove time backoff, make it eventual
--- - Clone on write
 
 type UStamp = Unique
 type OrigUStamp = UStamp
