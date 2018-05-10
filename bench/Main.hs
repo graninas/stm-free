@@ -1,9 +1,9 @@
 module Main where
 
-import           Criterion.Main
-
 import qualified Control.Concurrent.STM      as STM
 import           Control.Concurrent.STM.Free
+import           Control.Monad               (void)
+import           Criterion.Main
 
 stmIncrementTVar' :: STM.TVar Int -> IO ()
 stmIncrementTVar' tvar = STM.atomically $ STM.modifyTVar' tvar (+1)
@@ -14,6 +14,18 @@ stmIncrementTVar tvar = STM.atomically $ STM.modifyTVar tvar (+1)
 incrementTVar :: Context -> TVar Int -> IO ()
 incrementTVar ctx tvar = atomically ctx $ modifyTVar tvar (+1)
 
+stmSimpleScenario :: IO ()
+stmSimpleScenario = void $ STM.atomically $ do
+  tvar <- STM.newTVar 10
+  STM.writeTVar tvar 20
+  STM.readTVar tvar
+
+simpleScenario :: Context -> IO ()
+simpleScenario ctx = void $ atomically ctx $ do
+  tvar <- newTVar 10
+  writeTVar tvar 20
+  readTVar tvar
+
 main :: IO ()
 main = do
   ctx <- newContext
@@ -21,12 +33,17 @@ main = do
   tvar <- STM.newTVarIO 1
 
   defaultMain
-    [ bgroup "TVar"
-      [ bench "STM inc TVar strict" $ whnfIO $ stmIncrementTVar' tvar
-      , bench "FreeSTM inc TVar"    $ whnfIO $ incrementTVar ctx freeTVar
+    [ bgroup "TVar increment"
+      [ bench "Native STM strict" $ whnfIO $ stmIncrementTVar' tvar
+      , bench "FreeSTM"    $ whnfIO $ incrementTVar ctx freeTVar
+      ]
+    , bgroup "Simple scenario: newTVar / writeTVar / readTVar"
+      [ {-bench "Native STM" $ whnfIO stmSimpleScenario
+      , -}bench "FreeSTM"    $ whnfIO $ simpleScenario ctx
       ]
     ]
 
+-- ##### TVar increment
 -- Native STM:
 -- time                 50.93 ns   (50.19 ns .. 51.88 ns)
 --                      0.998 R²   (0.996 R² .. 0.999 R²)
@@ -55,3 +72,6 @@ main = do
 -- mean                 523.1 ns   (495.1 ns .. 553.5 ns)
 -- std dev              65.85 ns   (55.24 ns .. 82.89 ns)
 -- variance introduced by outliers: 93% (severely inflated)
+
+
+-- ####### Simple scenario: newTVar / writeTVar / readTVar
