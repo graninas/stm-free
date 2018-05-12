@@ -1,7 +1,7 @@
 module Control.Concurrent.STM.Free.Internal.Impl where
 
 import           Control.Concurrent                               (threadDelay)
-import qualified Data.Map                                         as Map
+import qualified Data.IntMap                                      as Map
 
 import           Control.Concurrent.STM.Free.Internal.Imports
 import           Control.Concurrent.STM.Free.Internal.Interpreter

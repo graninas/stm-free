@@ -1,6 +1,6 @@
 module Control.Concurrent.STM.Free.Internal.Interpreter where
 
-import qualified Data.Map                                     as Map
+import qualified Data.IntMap                                  as Map
 import           Unsafe.Coerce                                (unsafeCoerce)
 
 import           Control.Concurrent.STM.Free.Internal.Imports
