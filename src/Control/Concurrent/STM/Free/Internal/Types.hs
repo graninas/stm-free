@@ -2,23 +2,18 @@
 
 module Control.Concurrent.STM.Free.Internal.Types where
 
-import           Control.Concurrent.MVar    (MVar, newMVar, putMVar, takeMVar)
-import           Control.Monad.Free
-import           Control.Monad.State.Strict (StateT, evalStateT, get, modify,
-                                             put)
-import qualified Data.ByteString.Lazy       as BSL
-import qualified Data.HMap                  as HMap
-import           Data.IORef                 (IORef, modifyIORef, newIORef,
-                                             readIORef, writeIORef)
-import qualified Data.Map                   as Map
-import           Data.Unique                (Unique, hashUnique)
-import           GHC.Generics               (Generic)
+import           Control.Concurrent.STM.Free.Internal.Imports
+
+import qualified Data.ByteString.Lazy                         as BSL
+import qualified Data.HashTable.IO                            as HT
+import qualified GHC.Exts                                     as GHC
 
 -- TODOs:
 -- + Remove FromJSON / ToJSON limitation
 -- + Conflicts resolving: remove string building as conflict indicator
 -- + Clone on write
 -- + Remove IORef from TVarHandle.
+-- - hashtables + GHC.Any
 -- - Pregenerate a lot of uniques.
 -- - Replace Data.Unique by own ids (on base of Int).
 -- - Store context id in every TVar. This will allow to detect TVars in wrong contexts.
@@ -35,11 +30,12 @@ type UStamp = Unique
 type OrigUStamp = UStamp
 type UpdatedUStamp = UStamp
 
-data TVarHandle a = TVarHandle OrigUStamp UpdatedUStamp a
-type TVarKey a = HMap.HKey HMap.T (TVarHandle a)
-type TVars = HMap.HMap
+data TVarHandle = TVarHandle OrigUStamp UpdatedUStamp GHC.Any
 
-type Finalizer = TVars -> IO TVars
+type TVarId = UStamp
+type TVars = HT.BasicHashTable TVarId TVarHandle
+
+type Finalizer = TVars -> IO ()
 type ConflictDetector = TVars -> IO Bool
 
 data AtomicRuntime = AtomicRuntime

@@ -1,15 +1,11 @@
+{-# LANGUAGE LambdaCase #-}
+
 module Control.Concurrent.STM.Free.Internal.Interpreter where
 
-import           Control.Monad.Free                         (Free (..))
-import           Control.Monad.IO.Class                     (liftIO)
-import           Control.Monad.State.Strict                 (get, put)
-import qualified Data.HMap                                  as HMap
-import           Data.IORef                                 (IORef, newIORef,
-                                                             readIORef,
-                                                             writeIORef)
-import qualified Data.Map                                   as Map
+import           Control.Concurrent.STM.Free.Internal.Imports
 
-import           Data.Unique                                (hashUnique)
+import qualified Data.HashTable.IO                            as HT
+import           Unsafe.Coerce                                (unsafeCoerce)
 
 import           Control.Concurrent.STM.Free.Internal.Types
 import           Control.Concurrent.STM.Free.STML
@@ -18,53 +14,53 @@ import           Control.Concurrent.STM.Free.TVar
 newTVar' :: a -> Atomic (TVar a)
 newTVar' a = do
   AtomicRuntime rtStamp tvars conflictDetector finalizer <- get
+  key <- liftIO newUnique
 
-  key <- liftIO HMap.createKey
-
-  let tvarHandle = TVarHandle rtStamp rtStamp a
-  let newTVars = HMap.insert key tvarHandle tvars
+  let tvarHandle = TVarHandle rtStamp rtStamp $ unsafeCoerce a
   let newFinalizer finalizedTVars = do
-        prevFinalizedTVars <- finalizer finalizedTVars
-        pure $ HMap.insert key tvarHandle prevFinalizedTVars
+        finalizer finalizedTVars
+        HT.insert finalizedTVars key tvarHandle
 
-  put $ AtomicRuntime rtStamp newTVars conflictDetector newFinalizer
+  liftIO $ HT.insert tvars key tvarHandle
+  put $ AtomicRuntime rtStamp tvars conflictDetector newFinalizer
   pure $ TVar key
 
 readTVar' :: TVar a -> Atomic a
 readTVar' (TVar key) = do
   AtomicRuntime _ tvars _ _ <- get
-  let tvarId = hashUnique $ HMap.unique key
+  let tvarId = hashUnique key
 
-  case HMap.lookup key tvars of
+  liftIO (HT.lookup tvars key) >>= \case
     Nothing                   -> error $ "TVar not found (are you using the right context?): " ++ show tvarId
-    Just (TVarHandle _ _ val) -> pure val
+    Just (TVarHandle _ _ val) -> pure $ unsafeCoerce val
 
 writeTVar' :: TVar a -> a -> Atomic ()
 writeTVar' (TVar key) a = do
   AtomicRuntime rtStamp tvars conflictDetector finalizer <- get
+  let tvarId = hashUnique key
 
-  let tvarId = hashUnique $ HMap.unique key
-  case HMap.lookup key tvars of
+  liftIO (HT.lookup tvars key) >>= \case
     Nothing -> error $ "TVar not found (are you using the right context?): " ++ show tvarId
     Just (TVarHandle origUS _ _) -> do
-      let newTVarHandle = TVarHandle origUS rtStamp a
-      let newTVars = HMap.insert key newTVarHandle tvars
-      let detectConflict origTVars = case HMap.lookup key origTVars of
-            Nothing                       -> False
-            Just (TVarHandle origUS' _ _) -> origUS' /= origUS
+      let newTVarHandle = TVarHandle origUS rtStamp (unsafeCoerce a)
+      liftIO $ HT.insert tvars key newTVarHandle
+
+      let detectConflict origTVars = HT.lookup origTVars key >>= \case
+            Nothing                       -> pure False
+            Just (TVarHandle origUS' _ _) -> pure $ origUS' /= origUS
 
       let newConflictDetector origTVars = do
             prevConflict <- conflictDetector origTVars
             if prevConflict
               then pure True
-              else pure $ detectConflict origTVars
+              else detectConflict origTVars
 
       let newFinalizer finalizedTVars = do
-            prevFinalizedTVars <- finalizer finalizedTVars
-            let finalizedHandle = TVarHandle rtStamp rtStamp a
-            pure $ HMap.insert key finalizedHandle prevFinalizedTVars
+            let finalizedHandle = TVarHandle rtStamp rtStamp (unsafeCoerce a)
+            finalizer finalizedTVars
+            HT.insert finalizedTVars key finalizedHandle
 
-      put $ AtomicRuntime rtStamp newTVars newConflictDetector newFinalizer
+      put $ AtomicRuntime rtStamp tvars newConflictDetector newFinalizer
 
 interpretStmf :: STMF a -> Atomic (Either RetryCmd a)
 interpretStmf (NewTVar a nextF)       = Right . nextF      <$> newTVar' a

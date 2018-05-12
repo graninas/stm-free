@@ -37,10 +37,10 @@ main = do
       [ bench "Native STM strict" $ whnfIO $ stmIncrementTVar' tvar
       , bench "FreeSTM"    $ whnfIO $ incrementTVar ctx freeTVar
       ]
-    , bgroup "Simple scenario: newTVar / writeTVar / readTVar"
-      [ {-bench "Native STM" $ whnfIO stmSimpleScenario
-      , -}bench "FreeSTM"    $ whnfIO $ simpleScenario ctx
-      ]
+    -- , bgroup "Simple scenario: newTVar / writeTVar / readTVar"
+    --   [ {-bench "Native STM" $ whnfIO stmSimpleScenario
+    --   , -}bench "FreeSTM"    $ whnfIO $ simpleScenario ctx
+    --   ]
     ]
 
 -- ##### TVar increment
@@ -74,4 +74,10 @@ main = do
 -- variance introduced by outliers: 93% (severely inflated)
 
 
--- ####### Simple scenario: newTVar / writeTVar / readTVar
+-- ############ hashtables + Any
+-- benchmarking TVar increment/FreeSTM
+-- time                 843.3 ns   (805.8 ns .. 895.5 ns)
+--                      0.979 R²   (0.957 R² .. 0.994 R²)
+-- mean                 873.0 ns   (832.3 ns .. 961.0 ns)
+-- std dev              134.8 ns   (62.83 ns .. 209.8 ns)
+-- variance introduced by outliers: 95% (severely inflated)

@@ -2,13 +2,8 @@
 
 module Control.Concurrent.STM.Free.STM where
 
-import           Control.Concurrent.MVar                    (newMVar)
-import           Control.Exception
-import           Control.Monad.Free
-import qualified Data.HMap                                  as HMap
-import           Data.IORef                                 (newIORef)
-import qualified Data.Map                                   as Map
-import           GHC.Generics                               (Generic)
+import           Control.Concurrent.STM.Free.Internal.Imports
+import           Control.Exception                            (Exception, catch)
 
 import           Control.Concurrent.STM.Free.Internal.Impl
 import           Control.Concurrent.STM.Free.Internal.Types
@@ -32,9 +27,7 @@ newEmptyTMVarIO :: Context -> IO (TMVar a)
 newEmptyTMVarIO ctx = atomically ctx newEmptyTMVar
 
 newContext :: IO Context
-newContext = do
-  mtvars <- newMVar HMap.empty
-  pure $ Context mtvars
+newContext = newContext'
 
 catchSTM :: Exception e => Context -> STML a -> (e -> STML a) -> IO a
 catchSTM ctx act handler = catch (atomically ctx act) handler'

@@ -19,7 +19,7 @@ dependencies:
 - containers
 - bytestring
 - random
-- HMap
+- hashtables
 
 library:
   source-dirs: src

@@ -1,16 +1,9 @@
 module Control.Concurrent.STM.Free.Internal.Impl where
 
+import           Control.Concurrent.STM.Free.Internal.Imports
+
 import           Control.Concurrent                               (threadDelay)
-import           Control.Concurrent.MVar                          (putMVar,
-                                                                   readMVar,
-                                                                   takeMVar)
-import           Control.Monad                                    (unless, when)
-import           Control.Monad.State.Strict                       (runStateT)
-import qualified Data.HMap                                        as HMap
-import           Data.IORef                                       (newIORef,
-                                                                   readIORef,
-                                                                   writeIORef)
-import qualified Data.Map                                         as Map
+import qualified Data.HashTable.IO                                as HT
 import           Data.Unique                                      (newUnique)
 
 
@@ -21,27 +14,32 @@ import           Control.Concurrent.STM.Free.TVar
 
 takeSnapshot :: Context -> IO (UStamp, TVars)
 takeSnapshot (Context mtvars) = do
-  tvars <- readMVar mtvars
+  clonedTVars <- HT.new
+
+  tvars <- takeMVar mtvars
+  HT.mapM_ (uncurry (HT.insert clonedTVars)) tvars
+  putMVar mtvars tvars
+
   ustamp <- newUnique
-  pure (ustamp, tvars)
+  pure (ustamp, clonedTVars)
 
 -- TODO: exception safety (with proper implementation, shouldn't be a problem)
 tryCommit :: Context -> AtomicRuntime -> IO Bool
 tryCommit (Context mtvars)
           (AtomicRuntime stagedUS _ conflictDetector finalizer) = do
-  origTVars <- takeMVar mtvars
-  conflict <- conflictDetector origTVars
+  tvars <- takeMVar mtvars
+  conflict <- conflictDetector tvars
   if conflict
-    then putMVar mtvars origTVars
+    then putMVar mtvars tvars
     else do
-      stagedTVars <- finalizer origTVars
-      putMVar mtvars $ HMap.union stagedTVars origTVars
+      finalizer tvars
+      putMVar mtvars tvars
   pure $ not conflict
 
 runSTM :: Int -> Context -> STML a -> IO a
 runSTM delay ctx stml = do
-  (ustamp, tvars) <- takeSnapshot ctx
-  let atomicRuntime = AtomicRuntime ustamp tvars (const $ pure False) pure
+  (ustamp, clonedTVars) <- takeSnapshot ctx
+  let atomicRuntime = AtomicRuntime ustamp clonedTVars (const $ pure False) (const (pure ()))
 
   (eRes, resultAtomicRuntime) <- runStateT (runSTML stml) atomicRuntime
   case eRes of
@@ -54,3 +52,9 @@ runSTM delay ctx stml = do
           threadDelay delay
           runSTM (delay * 2) ctx stml      -- TODO: tail recursion
       pure res
+
+newContext' :: IO Context
+newContext' = do
+  tvars <- HT.new
+  mtvars <- newMVar tvars
+  pure $ Context mtvars
