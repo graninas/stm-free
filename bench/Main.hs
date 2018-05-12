@@ -37,10 +37,10 @@ main = do
       [ bench "Native STM strict" $ whnfIO $ stmIncrementTVar' tvar
       , bench "FreeSTM"    $ whnfIO $ incrementTVar ctx freeTVar
       ]
-    , bgroup "Simple scenario: newTVar / writeTVar / readTVar"
-      [ {-bench "Native STM" $ whnfIO stmSimpleScenario
-      , -}bench "FreeSTM"    $ whnfIO $ simpleScenario ctx
-      ]
+    -- , bgroup "Simple scenario: newTVar / writeTVar / readTVar"
+    --   [ {-bench "Native STM" $ whnfIO stmSimpleScenario
+    --   , -}bench "FreeSTM"    $ whnfIO $ simpleScenario ctx
+    --   ]
     ]
 
 -- ##### TVar increment
@@ -73,5 +73,9 @@ main = do
 -- std dev              65.85 ns   (55.24 ns .. 82.89 ns)
 -- variance introduced by outliers: 93% (severely inflated)
 
-
--- ####### Simple scenario: newTVar / writeTVar / readTVar
+-- stm-free, with Data.Map + IORefs optimizations:
+-- time                 445.0 ns   (433.9 ns .. 461.7 ns)
+--                      0.992 R²   (0.989 R² .. 0.995 R²)
+-- mean                 454.4 ns   (443.9 ns .. 465.3 ns)
+-- std dev              29.26 ns   (23.39 ns .. 36.75 ns)
+-- variance introduced by outliers: 76% (severely inflated)

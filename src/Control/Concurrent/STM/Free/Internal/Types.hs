@@ -3,15 +3,15 @@
 module Control.Concurrent.STM.Free.Internal.Types where
 
 import           Control.Concurrent.STM.Free.Internal.Imports
-import qualified Data.HMap                                    as HMap
+import qualified Data.Map                                     as Map
 
 type UStamp = Unique
 type OrigUStamp = UStamp
 type UpdatedUStamp = UStamp
 
-data TVarHandle a = TVarHandle OrigUStamp UpdatedUStamp a
-type TVarKey a = HMap.HKey HMap.T (TVarHandle a)
-type TVars = HMap.HMap
+newtype TVar a = TVar UStamp
+data TVarHandle = TVarHandle OrigUStamp UpdatedUStamp Any
+type TVars = Map.Map UStamp TVarHandle
 
 type Finalizer = TVars -> IO TVars
 type ConflictDetector = TVars -> IO Bool

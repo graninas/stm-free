@@ -1,7 +1,7 @@
 module Control.Concurrent.STM.Free.Internal.Impl where
 
 import           Control.Concurrent                               (threadDelay)
-import qualified Data.HMap                                        as HMap
+import qualified Data.Map                                         as Map
 
 import           Control.Concurrent.STM.Free.Internal.Imports
 import           Control.Concurrent.STM.Free.Internal.Interpreter
@@ -25,7 +25,7 @@ tryCommit (Context mtvars)
     then putMVar mtvars origTVars
     else do
       stagedTVars <- finalizer origTVars
-      putMVar mtvars $ HMap.union stagedTVars origTVars
+      putMVar mtvars $ Map.union stagedTVars origTVars
   pure $ not conflict
 
 runSTM :: Int -> Context -> STML a -> IO a
@@ -44,3 +44,8 @@ runSTM delay ctx stml = do
           threadDelay delay
           runSTM (delay * 2) ctx stml      -- TODO: tail recursion
       pure res
+
+newContext' :: IO Context
+newContext' = do
+  mtvars <- newMVar Map.empty
+  pure $ Context mtvars

@@ -19,7 +19,6 @@ dependencies:
 - containers
 - bytestring
 - random
-- HMap
 
 library:
   source-dirs: src

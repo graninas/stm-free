@@ -1,6 +1,5 @@
 module Control.Concurrent.STM.Free.Internal.Imports
   ( module X
-  , module Map
   ) where
 
 import           Control.Concurrent.MVar    as X (MVar, newEmptyMVar, newMVar,
@@ -13,5 +12,5 @@ import           Control.Monad.State.Strict as X (StateT, evalStateT,
                                                   put, runStateT)
 import           Data.IORef                 as X (IORef, modifyIORef', newIORef,
                                                   readIORef, writeIORef)
-import qualified Data.Map                   as Map
 import           Data.Unique                as X (Unique, hashUnique, newUnique)
+import           GHC.Exts                   as X (Any)
