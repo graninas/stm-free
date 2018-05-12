@@ -4,8 +4,6 @@ import           Control.Concurrent.STM.Free.Internal.Imports
 
 import           Control.Concurrent                               (threadDelay)
 import qualified Data.HashTable.IO                                as HT
-import           Data.Unique                                      (newUnique)
-
 
 import           Control.Concurrent.STM.Free.Internal.Interpreter
 import           Control.Concurrent.STM.Free.Internal.Types
@@ -13,20 +11,20 @@ import           Control.Concurrent.STM.Free.STML
 import           Control.Concurrent.STM.Free.TVar
 
 takeSnapshot :: Context -> IO (UStamp, TVars)
-takeSnapshot (Context mtvars) = do
+takeSnapshot (Context mtvars keyGen) = do
   clonedTVars <- HT.new
+  ustamp <- keyGen
 
   tvars <- takeMVar mtvars
   HT.mapM_ (uncurry (HT.insert clonedTVars)) tvars
   putMVar mtvars tvars
 
-  ustamp <- newUnique
   pure (ustamp, clonedTVars)
 
 -- TODO: exception safety (with proper implementation, shouldn't be a problem)
 tryCommit :: Context -> AtomicRuntime -> IO Bool
-tryCommit (Context mtvars)
-          (AtomicRuntime stagedUS _ conflictDetector finalizer) = do
+tryCommit (Context mtvars _)
+          (AtomicRuntime stagedUS _ conflictDetector finalizer _) = do
   tvars <- takeMVar mtvars
   conflict <- conflictDetector tvars
   if conflict
@@ -37,9 +35,9 @@ tryCommit (Context mtvars)
   pure $ not conflict
 
 runSTM :: Int -> Context -> STML a -> IO a
-runSTM delay ctx stml = do
+runSTM delay ctx@(Context mtvars keyGen) stml = do
   (ustamp, clonedTVars) <- takeSnapshot ctx
-  let atomicRuntime = AtomicRuntime ustamp clonedTVars (const $ pure False) (const (pure ()))
+  let atomicRuntime = AtomicRuntime ustamp clonedTVars (const $ pure False) (const (pure ())) keyGen
 
   (eRes, resultAtomicRuntime) <- runStateT (runSTML stml) atomicRuntime
   case eRes of
@@ -56,5 +54,9 @@ runSTM delay ctx stml = do
 newContext' :: IO Context
 newContext' = do
   tvars <- HT.new
+  keyGenRef <- newIORef 1
   mtvars <- newMVar tvars
-  pure $ Context mtvars
+  pure $ Context mtvars (mkKeyGen keyGenRef)
+
+mkKeyGen :: IORef Int -> IO Int
+mkKeyGen ref = atomicModifyIORef' ref (\v -> (v + 1, v))

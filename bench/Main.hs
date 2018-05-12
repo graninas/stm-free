@@ -81,3 +81,11 @@ main = do
 -- mean                 873.0 ns   (832.3 ns .. 961.0 ns)
 -- std dev              134.8 ns   (62.83 ns .. 209.8 ns)
 -- variance introduced by outliers: 95% (severely inflated)
+
+-- hashtables + Any + int keys
+-- benchmarking TVar increment/FreeSTM
+-- time                 859.6 ns   (797.3 ns .. 938.1 ns)
+--                      0.937 R²   (0.890 R² .. 0.970 R²)
+-- mean                 1.106 μs   (878.9 ns .. 1.694 μs)
+-- std dev              822.1 ns   (171.3 ns .. 1.496 μs)
+-- variance introduced by outliers: 99% (severely inflated)
