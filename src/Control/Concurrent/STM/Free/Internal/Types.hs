@@ -54,5 +54,3 @@ type Atomic a = StateT AtomicRuntime IO a
 newtype Context = Context
   { mtvars :: MVar TVars
   }
-
-data RetryCmd = RetryCmd
