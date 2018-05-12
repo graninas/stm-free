@@ -79,3 +79,10 @@ main = do
 -- mean                 454.4 ns   (443.9 ns .. 465.3 ns)
 -- std dev              29.26 ns   (23.39 ns .. 36.75 ns)
 -- variance introduced by outliers: 76% (severely inflated)
+
+-- stm-free, basic tweaks, with Data.Map - IORefs + Any + Int key:
+-- time                 327.4 ns   (315.0 ns .. 340.4 ns)
+--                      0.986 R²   (0.972 R² .. 0.995 R²)
+-- mean                 341.5 ns   (320.5 ns .. 415.0 ns)
+-- std dev              75.12 ns   (21.75 ns .. 139.1 ns)
+-- variance introduced by outliers: 97% (severely inflated)
