@@ -2,17 +2,8 @@
 
 module Control.Concurrent.STM.Free.Internal.Types where
 
-import           Control.Concurrent.MVar    (MVar, newMVar, putMVar, takeMVar)
-import           Control.Monad.Free
-import           Control.Monad.State.Strict (StateT, evalStateT, get, modify,
-                                             put)
-import qualified Data.ByteString.Lazy       as BSL
-import qualified Data.HMap                  as HMap
-import           Data.IORef                 (IORef, modifyIORef, newIORef,
-                                             readIORef, writeIORef)
-import qualified Data.Map                   as Map
-import           Data.Unique                (Unique, hashUnique)
-import           GHC.Generics               (Generic)
+import           Control.Concurrent.STM.Free.Internal.Imports
+import qualified Data.HMap                                    as HMap
 
 -- TODOs:
 -- + Remove FromJSON / ToJSON limitation

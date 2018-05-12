@@ -1,16 +1,8 @@
 module Control.Concurrent.STM.Free.Internal.Interpreter where
 
-import           Control.Monad.Free                         (Free (..))
-import           Control.Monad.IO.Class                     (liftIO)
-import           Control.Monad.State.Strict                 (get, put)
-import qualified Data.HMap                                  as HMap
-import           Data.IORef                                 (IORef, newIORef,
-                                                             readIORef,
-                                                             writeIORef)
-import qualified Data.Map                                   as Map
+import qualified Data.HMap                                    as HMap
 
-import           Data.Unique                                (hashUnique)
-
+import           Control.Concurrent.STM.Free.Internal.Imports
 import           Control.Concurrent.STM.Free.Internal.Types
 import           Control.Concurrent.STM.Free.STML
 import           Control.Concurrent.STM.Free.TVar

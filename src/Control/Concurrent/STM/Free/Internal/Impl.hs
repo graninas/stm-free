@@ -1,19 +1,9 @@
 module Control.Concurrent.STM.Free.Internal.Impl where
 
 import           Control.Concurrent                               (threadDelay)
-import           Control.Concurrent.MVar                          (putMVar,
-                                                                   readMVar,
-                                                                   takeMVar)
-import           Control.Monad                                    (unless, when)
-import           Control.Monad.State.Strict                       (runStateT)
 import qualified Data.HMap                                        as HMap
-import           Data.IORef                                       (newIORef,
-                                                                   readIORef,
-                                                                   writeIORef)
-import qualified Data.Map                                         as Map
-import           Data.Unique                                      (newUnique)
 
-
+import           Control.Concurrent.STM.Free.Internal.Imports
 import           Control.Concurrent.STM.Free.Internal.Interpreter
 import           Control.Concurrent.STM.Free.Internal.Types
 import           Control.Concurrent.STM.Free.STML
