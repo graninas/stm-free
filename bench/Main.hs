@@ -66,14 +66,14 @@ main = do
 -- variance introduced by outliers: 99% (severely inflated)
 
 --
--- stm-free, with HMap + IORefs optimizations:
+-- stm-free, with HMap - IORefs:
 -- time                 509.2 ns   (475.1 ns .. 547.1 ns)   -- spiking up to 600ns
 --                      0.979 R²   (0.976 R² .. 0.987 R²)
 -- mean                 523.1 ns   (495.1 ns .. 553.5 ns)
 -- std dev              65.85 ns   (55.24 ns .. 82.89 ns)
 -- variance introduced by outliers: 93% (severely inflated)
 
--- stm-free, with Data.Map + IORefs optimizations:
+-- stm-free, basic tweaks, with Data.Map - IORefs + Any:
 -- time                 445.0 ns   (433.9 ns .. 461.7 ns)
 --                      0.992 R²   (0.989 R² .. 0.995 R²)
 -- mean                 454.4 ns   (443.9 ns .. 465.3 ns)
