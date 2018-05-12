@@ -1,7 +1,7 @@
-module Control.Concurrent.STM.Free.Internal.STML.Interpreter where
+module Control.Concurrent.STM.Free.Internal.Interpreter where
 
-import           Control.Monad.Free.Church                  (foldF)
-import           Control.Monad.Free                         (Free(..))
+import           Control.Monad.Free                         (Free (..))
+import           Control.Monad.Free.Church                  (fromF, improve)
 import           Control.Monad.IO.Class                     (liftIO)
 import           Control.Monad.State.Strict                 (get, put)
 import qualified Data.HMap                                  as HMap
@@ -67,19 +67,19 @@ writeTVar' (TVar key) a = do
 
       put $ AtomicRuntime rtStamp newTVars newConflictDetector newFinalizer
 
-interpretStmf :: STMF a -> Atomic a
-interpretStmf (NewTVar a nextF)       = nextF      <$> newTVar' a
-interpretStmf (ReadTVar tvar nextF)   = nextF      <$> readTVar' tvar
-interpretStmf (WriteTVar tvar a next) = const next <$> writeTVar' tvar a
-interpretStmf (Retry next)            = pure next
+interpretStmf :: STMF a -> Atomic (Either RetryCmd a)
+interpretStmf (NewTVar a nextF)       = (Right . nextF)      <$> newTVar' a
+interpretStmf (ReadTVar tvar nextF)   = (Right . nextF)      <$> readTVar' tvar
+interpretStmf (WriteTVar tvar a next) = const (Right next) <$> writeTVar' tvar a
+interpretStmf Retry                   = pure $ Left RetryCmd
 
--- interpretStml :: STML a -> Atomic (Either RetryCmd a)
--- interpretStml (Pure a) = pure $ Right a
--- interpretStml (Free f) = do
---   eRes <- interpretStmf f
---   case eRes of
---     Left RetryCmd -> pure $ Left RetryCmd
---     Right res     -> interpretStml res
+interpretStml :: STML' a -> Atomic (Either RetryCmd a)
+interpretStml (Pure a) = pure $ Right a
+interpretStml (Free f) = do
+  eRes <- interpretStmf f
+  case eRes of
+    Left RetryCmd -> pure $ Left RetryCmd
+    Right res     -> interpretStml res
 
-runSTML :: STML a -> Atomic a
-runSTML = foldF interpretStmf
+runSTML :: STML a -> Atomic (Either RetryCmd a)
+runSTML stml = interpretStml (fromF stml)
