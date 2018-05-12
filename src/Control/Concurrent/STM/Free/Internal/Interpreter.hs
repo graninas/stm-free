@@ -1,4 +1,4 @@
-module Control.Concurrent.STM.Free.Internal.STML.Interpreter where
+module Control.Concurrent.STM.Free.Internal.Interpreter where
 
 import           Control.Monad.Free                         (Free (..))
 import           Control.Monad.IO.Class                     (liftIO)
