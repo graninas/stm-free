@@ -10,7 +10,8 @@ import           Control.Monad.IO.Class     as X (liftIO)
 import           Control.Monad.State.Strict as X (StateT, evalStateT,
                                                   execStateT, get, gets, modify,
                                                   put, runStateT)
-import           Data.IORef                 as X (IORef, modifyIORef', newIORef,
+import           Data.IORef                 as X (IORef, atomicModifyIORef',
+                                                  modifyIORef', newIORef,
                                                   readIORef, writeIORef)
 import           Data.Unique                as X (Unique, hashUnique, newUnique)
 import           GHC.Exts                   as X (Any)

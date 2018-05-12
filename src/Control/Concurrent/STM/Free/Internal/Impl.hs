@@ -10,15 +10,15 @@ import           Control.Concurrent.STM.Free.STML
 import           Control.Concurrent.STM.Free.TVar
 
 takeSnapshot :: Context -> IO (UStamp, TVars)
-takeSnapshot (Context mtvars) = do
+takeSnapshot (Context mtvars keyGen) = do
   tvars <- readMVar mtvars
-  ustamp <- newUnique
+  ustamp <- keyGen
   pure (ustamp, tvars)
 
 -- TODO: exception safety (with proper implementation, shouldn't be a problem)
 tryCommit :: Context -> AtomicRuntime -> IO Bool
-tryCommit (Context mtvars)
-          (AtomicRuntime stagedUS _ conflictDetector finalizer) = do
+tryCommit (Context mtvars _)
+          (AtomicRuntime stagedUS _ conflictDetector finalizer keyGen) = do
   origTVars <- takeMVar mtvars
   conflict <- conflictDetector origTVars
   if conflict
@@ -29,9 +29,9 @@ tryCommit (Context mtvars)
   pure $ not conflict
 
 runSTM :: Int -> Context -> STML a -> IO a
-runSTM delay ctx stml = do
+runSTM delay ctx@(Context mtvars keyGen) stml = do
   (ustamp, tvars) <- takeSnapshot ctx
-  let atomicRuntime = AtomicRuntime ustamp tvars (const $ pure False) pure
+  let atomicRuntime = AtomicRuntime ustamp tvars (const $ pure False) pure keyGen
 
   (eRes, resultAtomicRuntime) <- runStateT (runSTML stml) atomicRuntime
   case eRes of
@@ -47,5 +47,9 @@ runSTM delay ctx stml = do
 
 newContext' :: IO Context
 newContext' = do
+  keyGenRef <- newIORef 1
   mtvars <- newMVar Map.empty
-  pure $ Context mtvars
+  pure $ Context mtvars (mkKeyGen keyGenRef)
+
+mkKeyGen :: IORef Int -> IO Int
+mkKeyGen ref = atomicModifyIORef' ref (\v -> (v + 1, v))
