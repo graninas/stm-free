@@ -39,7 +39,11 @@ packages:
 - .
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
-extra-deps: [HMap-1.3.0]
+extra-deps:
+- HMap-1.3.0
+
+- git: https://github.com/atzeus/reflection-without-remorse.git
+  commit: 8ea7ad4c58230d126730fa005d996184e58eb00a
 
 # Override default flag values for local packages and extra-deps
 # flags: {}

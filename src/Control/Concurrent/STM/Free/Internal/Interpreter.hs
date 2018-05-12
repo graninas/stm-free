@@ -1,6 +1,7 @@
 module Control.Concurrent.STM.Free.Internal.Interpreter where
 
-import           Control.Monad.Free                         (Free (..))
+import           Control.Monad.Free.Reflectable             (FreeMonadView (..),
+                                                             toView)
 import           Control.Monad.IO.Class                     (liftIO)
 import           Control.Monad.State.Strict                 (get, put)
 import qualified Data.HMap                                  as HMap
@@ -72,13 +73,13 @@ interpretStmf (ReadTVar tvar nextF)   = Right . nextF      <$> readTVar' tvar
 interpretStmf (WriteTVar tvar a next) = const (Right next) <$> writeTVar' tvar a
 interpretStmf Retry                   = pure $ Left RetryCmd
 
-interpretStml :: STML a -> Atomic (Either RetryCmd a)
+interpretStml :: StmlView a -> Atomic (Either RetryCmd a)
 interpretStml (Pure a) = pure $ Right a
-interpretStml (Free f) = do
+interpretStml (Impure f) = do
   eRes <- interpretStmf f
   case eRes of
     Left RetryCmd -> pure $ Left RetryCmd
-    Right res     -> interpretStml res
+    Right res     -> interpretStml . toView $ res
 
 runSTML :: STML a -> Atomic (Either RetryCmd a)
-runSTML = interpretStml
+runSTML = interpretStml . toView

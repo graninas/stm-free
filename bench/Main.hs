@@ -73,5 +73,10 @@ main = do
 -- std dev              65.85 ns   (55.24 ns .. 82.89 ns)
 -- variance introduced by outliers: 93% (severely inflated)
 
-
--- ####### Simple scenario: newTVar / writeTVar / readTVar
+-- No Remorse
+-- benchmarking TVar increment/FreeSTM
+-- time                 671.2 ns   (638.2 ns .. 711.3 ns)
+--                      0.982 R²   (0.975 R² .. 0.989 R²)
+-- mean                 671.3 ns   (644.4 ns .. 701.9 ns)
+-- std dev              73.72 ns   (64.10 ns .. 86.94 ns)
+-- variance introduced by outliers: 90% (severely inflated)

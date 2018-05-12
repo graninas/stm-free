@@ -20,6 +20,7 @@ dependencies:
 - bytestring
 - random
 - HMap
+- reflection-without-remorse
 
 library:
   source-dirs: src
