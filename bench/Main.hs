@@ -28,7 +28,7 @@ simpleScenario ctx = void $ atomically ctx $ do
 
 main :: IO ()
 main = do
-  baseIntCtx <- createContext BaseMap IntKey
+  baseIntCtx <- createContext DataMap IntKey
   freeTVar <- newTVarIO baseIntCtx 1
   tvar <- STM.newTVarIO 1
 

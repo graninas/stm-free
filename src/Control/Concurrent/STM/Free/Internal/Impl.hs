@@ -6,6 +6,7 @@ import qualified Data.Map                                         as Map
 import           Control.Concurrent.STM.Free.Internal.Imports
 import           Control.Concurrent.STM.Free.Internal.Interpreter
 import           Control.Concurrent.STM.Free.Internal.Types
+import           Control.Concurrent.STM.Free.Context
 import           Control.Concurrent.STM.Free.STML
 import           Control.Concurrent.STM.Free.TVar
 
