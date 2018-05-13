@@ -9,7 +9,9 @@ type UStamp = Int
 type OrigUStamp = UStamp
 type UpdatedUStamp = UStamp
 
-newtype TVar a = TVar UStamp
+type TVarKey a = TVarKeyImpl
+data TVar a = TVar (TVarKey a) UStamp
+
 data TVarHandle = TVarHandle OrigUStamp UpdatedUStamp Any
 type TVars = Map.Map UStamp TVarHandle
 
@@ -27,9 +29,14 @@ data AtomicRuntime = AtomicRuntime
 
 type Atomic a = StateT AtomicRuntime IO a
 
-data Context = Context
-  { mtvars :: MVar TVars
-  , keyGen :: KeyGen
-  }
+data HMapContext
+  = Context
+    { mtvars :: MVar TVars
+    , keyGen :: KeyGen
+    }
+  | HMapContext
+    { mtvars :: MVar TVars
+    , keyGen :: KeyGen
+    }
 
 data RetryCmd = RetryCmd

@@ -28,14 +28,14 @@ simpleScenario ctx = void $ atomically ctx $ do
 
 main :: IO ()
 main = do
-  ctx <- newContext
-  freeTVar <- newTVarIO ctx 1
+  baseIntCtx <- createContext BaseMap IntKey
+  freeTVar <- newTVarIO baseIntCtx 1
   tvar <- STM.newTVarIO 1
 
   defaultMain
     [ bgroup "TVar increment"
-      [ bench "Native STM strict" $ whnfIO $ stmIncrementTVar' tvar
-      , bench "FreeSTM"    $ whnfIO $ incrementTVar ctx freeTVar
+      [ bench "Native STM" $ whnfIO     $ stmIncrementTVar' tvar
+      , bench "stm-free BaseMap IntKey" $ whnfIO $ incrementTVar baseIntCtx freeTVar
       ]
     -- , bgroup "Simple scenario: newTVar / writeTVar / readTVar"
     --   [ {-bench "Native STM" $ whnfIO stmSimpleScenario
