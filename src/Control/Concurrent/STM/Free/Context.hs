@@ -1,24 +1,26 @@
+{-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 module Control.Concurrent.STM.Free.Context where
 
-import qualified Data.Map as Map
+import qualified Data.Map                                     as Map
 
 import           Control.Concurrent.STM.Free.Internal.Imports
 import           Control.Concurrent.STM.Free.Internal.Types
 
-data DataMap = DataMap
-data IntKey = IntKey
+data StorageType = DataMap
+data KeyType = IntKey
 
 data StorageAPI st key = StorageAPI
-  { newSt :: IO st
+  { newSt    :: IO st
   , insertSt :: key -> Any -> st -> IO st
   , lookupSt :: key -> st -> IO (Maybe Any)
   }
 
-data Context where
-  { storageApi :: StorageAPI st key -> Context
-  
+data Context = Context
+  { storageApi :: StorageAPI st key
+  , mtvars     :: MVar st
+  , keyGen     :: KeyGen
   }
 
 -- class Storage stType kType st key | stType -> st, stType -> kType, kType -> key where
@@ -26,19 +28,26 @@ data Context where
 --   insertSt :: key -> Any -> st -> IO st
 --   lookupSt :: key -> st -> IO (Maybe Any)
 
-class StmStorage stType kType
+class STMApi (stType :: StorageType) (kType :: KeyType)
 
-instance StmStorage DataMap IntKey
+instance STMApi DataMap IntKey
 
-createContext :: StmStorage stType kType => stType -> kType -> Context
+createContext :: STMApi stType kType => stType -> kType -> Context
 createContext DataMap IntKey = do
-  let newSt'           = pure (Map.empty :: Map.Map Int Any)
-  let insertSt' k v st = pure $ Map.insert k v st
-  let lookupSt' k st   = pure $ Map.lookup k st
-  pure undefined
+  storageApi <- StorageAPI
+    { newSt    = pure (Map.empty :: Map.Map Int Any)
+    , insertSt = \k v st -> pure $ Map.insert k v st
+    , lookupSt = \k st -> pure $ Map.lookup k st
+    }
+  newContext' storageApi
 
-newContext' :: IO Context
-newContext' = do
+newContext' :: StorageAPI stType kType -> IO Context
+newContext' storageApi' = do
   keyGenRef <- newIORef 1
-  mtvars <- newMVar Map.empty
-  pure $ Context mtvars (mkKeyGen keyGenRef)
+  storage <- newSt storageApi'
+  mtvars' <- newMVar storage
+  pure Context
+    { storageApi = storageApi'
+    , mtvars = mtvars
+    , keyGen = mkKeyGen keyGenRef
+    }
